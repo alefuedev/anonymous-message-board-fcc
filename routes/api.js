@@ -1,8 +1,8 @@
 "use strict";
 let mongoose = require("mongoose");
 let Thread = require("./../models/thread");
+let expect = require("chai").expect;
 
-var expect = require("chai").expect;
 mongoose.connect(process.env.DB, {
 	useNewUrlParser: true,
 	useUnifiedTopology: true
@@ -11,12 +11,7 @@ mongoose.connect(process.env.DB, {
 module.exports = function(app) {
 	app.route("/api/threads/:board")
 
-		//
-		///Number 6 return an Array
-		///Work here limit 3 replies Incomplete
-		//Look for number 7 should be the same
 		.get(async function(req, res) {
-			console.log("get threads");
 			let board = await Thread.find(
 				{
 					board: req.params.board
@@ -29,12 +24,13 @@ module.exports = function(app) {
 				.exec()
 				.then(doc => res.send(doc));
 		})
-		//
-		//Number 4 Create a new Thread Done!!!
+
 		.post(async function(req, res) {
-			console.log("post");
 			let t = new Thread();
-			t.board = req.body.board;
+			t.board =
+				req.body.board == undefined
+					? req.params.board
+					: req.body.board;
 			t.text = req.body.text;
 			t.delete_password = req.body.delete_password;
 			t.save(function(err) {
@@ -45,34 +41,30 @@ module.exports = function(app) {
 				}
 			});
 		})
-		//Number 10 report thread Done!!
+
 		.put(async function(req, res) {
-			await Thread.findById(
-				{ _id: req.body.thread_id },
-				function(err, doc) {
-					if (err) {
-						console.log(err);
-					} else if (doc == null) {
-						res.redirect("back");
-					} else {
-						doc.reported = true;
-						doc.save(function(err) {
-							if (err) {
-								console.log(
-									err
-								);
-							} else {
-								res.send(
-									"success"
-								);
-							}
-						});
-					}
+			let id =
+				req.body.thread_id == undefined
+					? req.body.report_id
+					: req.body.thread_id;
+			await Thread.findById({ _id: id }, function(err, doc) {
+				if (err) {
+					console.log(err);
+				} else if (doc == null) {
+					res.redirect("back");
+				} else {
+					doc.reported = true;
+					doc.save(function(err) {
+						if (err) {
+							console.log(err);
+						} else {
+							res.send("success");
+						}
+					});
 				}
-			);
+			});
 		})
 
-		//8 Delete thread using id password Done!!
 		.delete(async function(req, res) {
 			let t = await Thread.findById(
 				{ _id: req.body.thread_id },
@@ -103,7 +95,7 @@ module.exports = function(app) {
 									}
 								}
 							);
-							res.send("succes");
+							res.send("success");
 						} else {
 							res.send(
 								"incorrect password"
@@ -114,13 +106,8 @@ module.exports = function(app) {
 			);
 		});
 
-	///7 Get Entire Thread hidding passwords Done!!
-	//notes Try to clean this part later
 	app.route("/api/replies/:board")
 		.get(async function(req, res) {
-			console.log("get replies!");
-			console.log(req.params);
-			console.log(req.query);
 			let board = req.params;
 			let thread_id = req.query.thread_id;
 			let t = await Thread.find(
@@ -140,13 +127,17 @@ module.exports = function(app) {
 				let repliesFilter = [];
 				let replies = t[0].replies;
 				for (let x = 0; x < replies.length; x++) {
-					let { reported, _id, text } = replies[
-						x
-					];
+					let {
+						reported,
+						_id,
+						text,
+						created_on
+					} = replies[x];
 					repliesFilter.push({
 						reported,
 						_id,
-						text
+						text,
+						created_on
 					});
 				}
 				let response = {
@@ -162,9 +153,7 @@ module.exports = function(app) {
 			}
 		})
 
-		///Number 5 Create a Reply Done!!!
 		.post(async function(req, res) {
-			console.log("post");
 			let t = await Thread.findById(
 				{ _id: req.body.thread_id },
 				function(err, doc) {
@@ -193,15 +182,20 @@ module.exports = function(app) {
 						console.log("not save");
 					} else {
 						console.log("save");
+						let board =
+							req.body.board ==
+							undefined
+								? t.board
+								: req.body
+										.board;
 						res.redirect(
-							`/b/${req.body.board}/${t._id}`
+							`/b/${board}/${t._id}`
 						);
 					}
 				});
 			}
 		})
 
-		//number 11 complete Done!!
 		.put(async function(req, res) {
 			let thread = await Thread.findById(
 				{ _id: req.body.thread_id },
@@ -240,10 +234,8 @@ module.exports = function(app) {
 			);
 		})
 
-		//number 9 Change text to deleted Complete!!
-		//Clean Code
 		.delete(async function(req, res) {
-			let thread = await thread.findbyid(
+			let thread = await Thread.findById(
 				{
 					_id: req.body.thread_id
 				},

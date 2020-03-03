@@ -49,6 +49,7 @@
               thread.push('<h3>'+ele.text+'</h3>');
               thread.push('</div><div class="replies">');
               ele.replies.forEach(function(rep) {
+								console.log(rep)
                 thread.push('<div class="reply">')
                 thread.push('<p class="id">id: '+rep._id+' ('+rep.created_on+')</p>');
                 thread.push('<form id="reportReply"><input type="hidden" name="thread_id" value="'+ele._id+'"><input type="hidden" name="reply_id" value="'+rep._id+'"><input type="submit" value="Report"></form>');
