@@ -181,7 +181,6 @@ module.exports = function(app) {
 					if (err) {
 						console.log("not save");
 					} else {
-						console.log("save");
 						let board =
 							req.body.board ==
 							undefined
