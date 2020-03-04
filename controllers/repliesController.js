@@ -72,7 +72,7 @@ exports.post_reply = async function(
 					boardName == undefined
 						? t.board
 						: boardName;
-				res.redirect(`/b/${board}/${t._id}`);
+				res.redirect(`/b/${t.board}/${t._id}`);
 			}
 		});
 	}

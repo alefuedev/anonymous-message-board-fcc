@@ -1,4 +1,5 @@
 let Thread = require("./../models/thread");
+
 exports.get_thread = async function(boardName, res) {
 	let board = await Thread.find(
 		{
